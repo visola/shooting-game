@@ -1,12 +1,26 @@
 import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Controller } from './controller';
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+scene.background = new THREE.Color(0x333333);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+new GLTFLoader().load('/models/room.glb', (gltf) => {
+  gltf.scene.children.forEach((c) => {
+    c.castShadow = true;
+    c.receiveShadow = true;
+  });
+  scene.add(gltf.scene);
+}, (err) => console.error)
 
 const COLORS = [
   0x00ff00, 0x0000ff, 0xff0000,
@@ -14,88 +28,67 @@ const COLORS = [
   0x0ff000, 0x000ff0, 0xf0000f,
 ];
 
-const floor = new THREE.Mesh(
-  new THREE.BoxGeometry( 200, 1, 200 ),
-  new THREE.MeshBasicMaterial( { color: 0xCCCCCC } )
-);
-floor.position.y = -1;
-scene.add(floor);
+// const floor = new THREE.Mesh(
+//   new THREE.BoxGeometry( 200, 1, 200 ),
+//   new THREE.MeshStandardMaterial( { color: 0xCCCCCC } )
+// );
+// floor.position.y = -1;
+// floor.receiveShadow = true;
+// floor.castShadow = false;
+// scene.add(floor);
 
 let colorIndex = 0;
+const size = 3;
 for (let i = 0; i <= 20; i++) {
   for (let j = 0; j <= 20; j++) {
     colorIndex++;
     if (colorIndex >= COLORS.length) {
       colorIndex = 0;
     }
-    const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    const material = new THREE.MeshBasicMaterial( { color: COLORS[colorIndex] } );
+    
+    const geometry = new THREE.BoxGeometry( size, size, size );
+    const material = new THREE.MeshStandardMaterial( { color: COLORS[colorIndex] } );
     const cube = new THREE.Mesh( geometry, material );
+    cube.receiveShadow = true;
+    cube.castShadow = true;
     cube.position.x = -100 + 10 * i;
+    cube.position.y = size / 2 + 2;
     cube.position.z = -100 + 10 * j;
     scene.add( cube );
   }
 }
 
-const controls = new PointerLockControls( camera, document.body );
-scene.add(controls.getObject());
+const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.01);
+scene.add(ambientLight);
+
+for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    const light = new THREE.PointLight(0xFFFFFF, 250, 100);
+    light.position.set(-110 + 120 * i, 15, -110 + 120 * j);
+    light.castShadow = true;
+    scene.add(light);
+  }
+}
+
+const controller = new Controller(camera, document.body, scene);
 
 document.body.addEventListener('click', () => {
-  controls.lock();
-});
-
-let moveForward = false, moveBackward = false;
-document.body.addEventListener('keydown', (e) => {
-  switch(e.code) {
-    case 'ArrowUp':
-    case 'KeyW':
-      moveForward = true;
-      break;
-    case 'ArrowDown':
-    case 'KeyS':
-      moveBackward = true;
-      break;
+  if (!controller.isLocked) {
+    controller.lock();
+    return;
   }
-});
 
-document.body.addEventListener('keyup', (e) => {
-  switch(e.code) {
-    case 'ArrowUp':
-    case 'KeyW':
-      moveForward = false;
-      break;
-    case 'ArrowDown':
-    case 'KeyS':
-        moveBackward = false;
-        break;
-  }
+  // Control shooting
 });
 
 camera.position.z = 5;
 
 const clock = new THREE.Clock();
 
-const velocity = new THREE.Vector3();
-
 function animate() {
 	requestAnimationFrame( animate );
   const delta = clock.getDelta();
-
-  velocity.x -= velocity.x * 10.0 * delta;
-  velocity.z -= velocity.z * 10.0 * delta;
-  velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
-
-  if ( moveForward || moveBackward ) velocity.z -= (moveBackward ? -1 : 1) * 400.0 * delta;
-
-  controls.moveRight( - velocity.x * delta );
-  controls.moveForward( - velocity.z * delta );
-  // controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-
-  if ( controls.getObject().position.y < 10 ) {
-    velocity.y = 0;
-    // controls.getObject().position.y = 10;
-  }
-
+  controller.animate(delta);
 	renderer.render( scene, camera );
 }
 animate();

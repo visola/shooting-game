@@ -20,22 +20,13 @@ new GLTFLoader().load('/models/room.glb', (gltf) => {
     c.receiveShadow = true;
   });
   scene.add(gltf.scene);
-}, (err) => console.error)
+}, () => console.error)
 
 const COLORS = [
   0x00ff00, 0x0000ff, 0xff0000,
   0xffff00, 0x00ffff, 0xff00ff,
   0x0ff000, 0x000ff0, 0xf0000f,
 ];
-
-// const floor = new THREE.Mesh(
-//   new THREE.BoxGeometry( 200, 1, 200 ),
-//   new THREE.MeshStandardMaterial( { color: 0xCCCCCC } )
-// );
-// floor.position.y = -1;
-// floor.receiveShadow = true;
-// floor.castShadow = false;
-// scene.add(floor);
 
 let colorIndex = 0;
 const size = 3;

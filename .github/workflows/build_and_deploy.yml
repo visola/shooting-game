@@ -5,7 +5,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-deploy:
+    permissions:
+      pages: write
+      id-token: write
+
     runs-on: ubuntu-latest
 
     steps:

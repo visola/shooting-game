@@ -61,10 +61,12 @@ for (let i = 0; i <= 20; i++) {
 const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.01);
 scene.add(ambientLight);
 
+const start = -130;
+const increment = 120;
 for (let i = 0; i < 3; i++) {
   for (let j = 0; j < 3; j++) {
     const light = new THREE.PointLight(0xFFFFFF, 250, 100);
-    light.position.set(-110 + 120 * i, 15, -110 + 120 * j);
+    light.position.set(start + increment * i, 15, start + increment * j);
     light.castShadow = true;
     scene.add(light);
   }

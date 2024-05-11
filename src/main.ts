@@ -5,6 +5,11 @@ import { Controller } from './controller';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x333333);
 
+let rootContext = '';
+if (window.location.pathname.includes('shooting-game')) {
+  rootContext = '/shooting-game';
+}
+
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
@@ -14,7 +19,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-new GLTFLoader().load('/models/room.glb', (gltf) => {
+new GLTFLoader().load(`${rootContext}/models/room.glb`, (gltf) => {
   gltf.scene.children.forEach((c) => {
     c.castShadow = true;
     c.receiveShadow = true;
